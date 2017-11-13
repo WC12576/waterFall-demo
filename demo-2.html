@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>demo-2</title>
+    <style type="text/css">
+		ul,li{
+			list-style: none;
+		}
+		.content{
+			position: relative;
+			width: 980px;
+			margin:0 auto;
+		}
+		.item{
+			position: absolute;
+			width: 320px;
+			margin-right: 10px;
+			margin-top: 10px;
+			border:1px solid #ccc;
+		}
+		.item a{
+			margin:5px;
+			width:310px;
+			display: block;
+		}
+		.item a > img{
+			width:100%;
+		}
+		.item h3{
+			border-bottom: 1px solid #ccc;
+			height:30px;
+			line-height: 30px;
+			margin:10px;
+            padding-bottom: 5px;
+		}
+		.item p{
+			margin:15px;
+			color:#666;
+		}
+		.hide{
+			display: none;
+		}
+		</style>
+</head>
+<body>
+    <ul class="content">
+        <!-- 获取item宽度 -->
+        <li class="item hide"></li>
+    </ul>
+    <!-- lazyload判断加载元素 -->
+    <div id="load"></div>
+    <script src="./jquery.min.js"></script>
+    <script>
+        var curPage = 1
+        var perPageCount = 10
+        var itemArr = []
+        var count = parseInt($('.content').width() / $('.item').width())
+        var clock
+        //初始化高度数组
+        for(var i=0;i<count;i++){
+            itemArr[i] = 0
+        }
+        start()
+        function start(){
+        　　getDate(function(newsList){
+            　　　//console.log(newsList)
+            　　　$.each(newsList,function(index,news){
+                　　　//console.log(news)
+                　　　　var $node = getNode(news)
+                　　　　//console.log($node) 
+                　　　　$node.find('img').load(function(){
+                    　　　　$('.content').append($node)
+                    　　　　waterFall($node)
+                　　　　})        
+            　　　})
+        　　})
+        }
+        $(window).scroll(function(newsList){
+	　　　　if(clock){
+		　　　　clearTimeout(clock)
+	　　　　}
+	　　　　clock = setTimeout(function(){
+	　　　　　　if(isVisible($('#load'))){
+		　　　　　　start()
+	　　　　　　}
+	　　　　},200)
+　　　　　})
+        //获取数据
+        function getDate(callback){
+            $.ajax({
+                url: 'http://platform.sina.com.cn/slide/album_tech',
+                dataType: 'jsonp',
+                jsonp: 'jsoncallback',
+                data: {
+                    app_key: 1271687855,
+                    num: perPageCount,
+                    page: curPage
+                }
+            }).done(function(ret){
+                if(ret && ret.status && ret.status.code === '0'){
+                    callback(ret.data)
+                    curPage++
+                }else{
+                    console.log('error')
+                }
+            })
+        }
+        //渲染元素
+        function getNode(data){
+            var html = ''
+            html += '<li class="item"><a href="' + data.url 
+	        html += '"><img src="' + data.img_url + '"></a>'
+	        html += '<h3>' + data.short_name + '</h3>'
+	        html += '<p>' + data.name + '</p></li>'
+	        return $(html); 
+        }
+        //瀑布流加载
+        function waterFall($node){
+            //console.log($node)
+            $node.each(function(){
+                var minValue = Math.min.apply(null,itemArr)
+                var minIndex = itemArr.indexOf(minValue)
+                var itemWidth = $('.item').outerWidth(true)
+                $(this).css({
+                    left: minIndex * itemWidth,
+                    top: itemArr[minIndex]
+                })
+                itemArr[minIndex] += $(this).outerHeight(true)
+                $('.content').css({height: Math.max.apply(null,itemArr)})
+            })
+        }
+        function isVisible($node){
+            var scrollTop = $(window).scrollTop()
+            var windowHeight = $(window).height()
+            var offsetTop = $node.offset().top
+            if(offsetTop < scrollTop + windowHeight && offsetTop > scrollTop){
+                return true
+            }
+            return false
+        } 
+    </script>
+</body>
+</html>
