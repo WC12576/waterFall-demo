@@ -81,6 +81,7 @@
     </div>
     <script src="./jquery.min.js"></script>
     <script>
+	waterFall()
         function waterFall(){
             var contentWidth = $('.content').width()
             var itemWidth = $('.item').width()
@@ -106,7 +107,7 @@
             })
 
         }
-        waterFall()
+        
         $(window).on('resize',function(){
             waterFall()
         })
